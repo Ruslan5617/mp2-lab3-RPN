@@ -23,7 +23,7 @@ bool ReversePolishNotation::checkBracket()
 
 bool ReversePolishNotation::Operation(char in)
 {
-	if (in == '(' || in == ')' || in == '+' || in == '*' || in == '-' || in == '/' || in == 'un+' || in =='un-') return true;
+	if (in == '(' || in == ')' || in == '+' || in == '*' || in == '-' || in == '/' || in == '$' || in =='~' || in == '^') return true;
 	else
 		return false;
 }
@@ -56,12 +56,6 @@ bool ReversePolishNotation::checkDoubleOperation()
 		case('-'): if (Str[i + 1] == '+' || Str[i + 1] == '-' || Str[i + 1] == '*' || Str[i + 1] == '/')
 			return false;
 
-		case('*'): if (Str[i + 1] == '+' || Str[i + 1] == '-' || Str[i + 1] == '*' || Str[i + 1] == '/')
-			return false;
-
-		case('/'): if (Str[i + 1] == '+' || Str[i + 1] == '-' || Str[i + 1] == '*' || Str[i + 1] == '/')
-			return false;
-
 		default: break;
 		}
 
@@ -91,10 +85,10 @@ int ReversePolishNotation::priority(char in)
 	case('*'):
 		return 3;
 
-	case('un+'):
+	case('$'):
 		return 3;
 
-	case('un-'):
+	case('~'):
 		return 3;
 
 	case('^'):
@@ -115,9 +109,9 @@ void ReversePolishNotation::Parse()
 		{
 			if (operations.empty())
 			{
-				if (Unary(i) && Str[i] == '-') { operations.push('un-'); unarMinus = true; }
+				if (Unary(i) && Str[i] == '-') { operations.push('~'); unarMinus = true; }
 				else
-					if (Unary(i) && Str[i] == '+') { operations.push('un+'); unarPlus = true; }
+					if (Unary(i) && Str[i] == '+') { operations.push('$'); unarPlus = true; }
 					else
 						operations.push(Str[i]);
 			}
@@ -125,7 +119,9 @@ void ReversePolishNotation::Parse()
 			{
 				switch (priority(Str[i]))
 				{
-				case(0): operations.push(Str[i]);
+				case(0):
+					operations.push(Str[i]);
+					break;
 
 				case(1):
 					while (operations.top() != '(')
@@ -142,19 +138,19 @@ void ReversePolishNotation::Parse()
 				case(2):
 					if (Unary(i))
 					{
-						while (operations.top() >= priority(Str[i]))
+						while (priority(operations.top()) >= priority(Str[i]))
 						{
 							rpnStr.append(1, operations.top());
 							rpnStr.append(1, ' ');
 							operations.pop();
 							if (operations.empty()) break;
-
-							if (Unary(i) && Str[i] == '-') { operations.push('un-'); unarMinus = true; }
-							else
-								if (Unary(i) && Str[i] == '+') { operations.push('un+'); unarPlus = true; }
 						}
+						if (Unary(i) && Str[i] == '-') { operations.push('~'); unarMinus = true; }
+						else
+							if (Unary(i) && Str[i] == '+') { operations.push('$'); unarPlus = true; }
+
 					}
-					while (operations.top() >= priority(Str[i]))
+					while (priority(operations.top()) >= priority(Str[i]))
 					{
 						rpnStr.append(1, operations.top());
 						rpnStr.append(1, ' ');
@@ -167,7 +163,7 @@ void ReversePolishNotation::Parse()
 
 				case(3):
 				{
-					while (operations.top() >= priority(Str[i]))
+					while (priority(operations.top()) >= priority(Str[i]))
 					{
 						rpnStr.append(1, operations.top());
 						rpnStr.append(1, ' ');
@@ -180,7 +176,7 @@ void ReversePolishNotation::Parse()
 				}
 				case(4):
 				{
-					while (operations.top() >= priority(Str[i]))
+					while (priority(operations.top()) >= priority(Str[i]))
 					{
 						rpnStr.append(1, operations.top());
 						rpnStr.append(1, ' ');
@@ -197,12 +193,14 @@ void ReversePolishNotation::Parse()
 			}
 		}
 
-		if (Digit(Str[i])) 
+		//else rpnStr = Str;
+
+		if (Digit(Str[i]))
 		{
-			rpnStr.append(1, Str[i]);  
+			rpnStr.append(1, Str[i]);
 			if (!Digit(Str[i + 1])) rpnStr.append(1, ' ');
 		}
-
+	}
 		while (!operations.empty())
 		{
 			if (operations.top() != '(')
@@ -212,7 +210,7 @@ void ReversePolishNotation::Parse()
 			}
 			operations.pop();
 		}
-	}
+	
 
 }
 
@@ -228,10 +226,7 @@ int ReversePolishNotation::getResult()
 
 ReversePolishNotation::ReversePolishNotation(std::string str)
 {
-	str = " ";
 	Str = str;
-	rpnStr = " ";
-	result = 0;
 }
 
 ReversePolishNotation::~ReversePolishNotation()
@@ -260,7 +255,7 @@ void ReversePolishNotation::calculate()
 		}
 		if (Operation(rpnStr[i]))
 		{
-			if (rpnStr[i] == 'un+' || rpnStr[i] == 'un-')
+			if (rpnStr[i] == '$' || rpnStr[i] == '~')
 			{
 				x = stoi(operations.top());
 				operations.pop();
@@ -272,7 +267,7 @@ void ReversePolishNotation::calculate()
 				x = stoi(operations.top());
 				operations.pop();
 			}
-			switch (rpnStr[i]) 
+			switch (rpnStr[i])
 			{
 			case('+'):
 
@@ -297,28 +292,29 @@ void ReversePolishNotation::calculate()
 				operations.push(to_string(tmp));
 				break;
 
-			case('un+'):
-				
+			case('$'):
+
 				tmp = abs(x);
 				operations.push(to_string(tmp));
 				break;
 
-			case('un-'):
-				
+			case('~'):
+
 				tmp = -x;
 				operations.push(to_string(tmp));
 				break;
 
 			case('^'):
-				
+
 				tmp = pow(x, y);
 				operations.push(to_string(tmp));
 				break;
+			}
 		}
 	}
 		result = stoi(operations.top());
+	
 }
-
 
 
 
