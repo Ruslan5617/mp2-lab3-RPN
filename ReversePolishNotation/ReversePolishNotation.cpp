@@ -56,12 +56,11 @@ bool ReversePolishNotation::checkDoubleOperation()
 		case('-'): if (Str[i + 1] == '+' || Str[i + 1] == '-' || Str[i + 1] == '*' || Str[i + 1] == '/')
 			return false;
 
-		default: break;
 		}
 
-		return true;
 
 	}
+	return true;
 }
 
 int ReversePolishNotation::priority(char in)
@@ -145,9 +144,9 @@ void ReversePolishNotation::Parse()
 							operations.pop();
 							if (operations.empty()) break;
 						}
-						if (Unary(i) && Str[i] == '-') { operations.push('~'); unarMinus = true; }
+						if (Str[i] == '-') { operations.push('~'); unarMinus = true; }
 						else
-							if (Unary(i) && Str[i] == '+') { operations.push('$'); unarPlus = true; }
+							if (Str[i] == '+') { operations.push('$'); unarPlus = true; } break;
 
 					}
 					while (priority(operations.top()) >= priority(Str[i]))
@@ -193,7 +192,7 @@ void ReversePolishNotation::Parse()
 			}
 		}
 
-		//else rpnStr = Str;
+		
 
 		if (Digit(Str[i]))
 		{
